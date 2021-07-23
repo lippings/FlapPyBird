@@ -5,6 +5,8 @@ import sys
 import pygame
 from pygame.locals import *
 
+from vision.event_generator import SMILE_EVENT, SmileEventGenerator
+
 
 FPS = 30
 SCREENWIDTH  = 288
@@ -47,6 +49,12 @@ PIPES_LIST = (
     'assets/sprites/pipe-green.png',
     'assets/sprites/pipe-red.png',
 )
+
+
+print('Loading detection model')
+event_gen = SmileEventGenerator(True)
+print('Done')
+event_gen.start()
 
 
 try:
@@ -160,7 +168,7 @@ def showWelcomeAnimation():
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 pygame.quit()
                 sys.exit()
-            if event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP):
+            if event.type == SMILE_EVENT or event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP):
                 # make first flap sound and return values for mainGame
                 SOUNDS['wing'].play()
                 return {
@@ -184,6 +192,7 @@ def showWelcomeAnimation():
         SCREEN.blit(IMAGES['base'], (basex, BASEY))
 
         pygame.display.update()
+        event_gen.display()
         FPSCLOCK.tick(FPS)
 
 
@@ -230,7 +239,7 @@ def mainGame(movementInfo):
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 pygame.quit()
                 sys.exit()
-            if event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP):
+            if event.type == SMILE_EVENT or event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP):
                 if playery > -2 * IMAGES['player'][0].get_height():
                     playerVelY = playerFlapAcc
                     playerFlapped = True
@@ -317,6 +326,7 @@ def mainGame(movementInfo):
         SCREEN.blit(playerSurface, (playerx, playery))
 
         pygame.display.update()
+        event_gen.display()
         FPSCLOCK.tick(FPS)
 
 
@@ -345,7 +355,7 @@ def showGameOverScreen(crashInfo):
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 pygame.quit()
                 sys.exit()
-            if event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP):
+            if event.type == SMILE_EVENT or event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP):
                 if playery + playerHeight >= BASEY - 1:
                     return
 
@@ -380,6 +390,7 @@ def showGameOverScreen(crashInfo):
         SCREEN.blit(IMAGES['gameover'], (50, 180))
 
         FPSCLOCK.tick(FPS)
+        event_gen.display()
         pygame.display.update()
 
 
