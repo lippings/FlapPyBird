@@ -1,33 +1,28 @@
-FlapPyBird
+FlapPyBird with smiles
 ===============
 
-A Flappy Bird Clone made using [python-pygame][pygame]
+A Flappy Bird clone where you can smile to fly. Based on [this repo](https://github.com/sourabhv/FlapPyBird)
 
-How-to (as tested on MacOS)
+Install and run
 ---------------------------
 
-1. Install Python 3.x (recommended) 2.x from [here](https://www.python.org/download/releases/)
-
-1. Install [pipenv]
-
-1. Install PyGame 1.9.x from [here](http://www.pygame.org/download.shtml)
+1. Install Python 3 [here](https://www.python.org/download/releases/)
 
 1. Clone the repository:
 
    ```bash
-   $ git clone https://github.com/sourabhv/FlapPyBird
+   $ git clone https://github.com/lippings/FlapPyBird.git
    ```
-
-   or download as zip and extract.
 
 1. In the root directory run
 
    ```bash
-   $ pipenv install
-   $ pipenv run python flappy.py
+   $ pip install -r requirements.txt
    ```
 
-1. Use <kbd>&uarr;</kbd> or <kbd>Space</kbd> key to play and <kbd>Esc</kbd> to close the game.
+1. Smile for the camera!
+
+1. Original controls also work: Use <kbd>&uarr;</kbd> or <kbd>Space</kbd> key to play and <kbd>Esc</kbd> to close the game.
 
 (For x64 windows, get exe [here](http://www.lfd.uci.edu/~gohlke/pythonlibs/#pygame))
 
