@@ -24,8 +24,6 @@ Install and run
 
 1. Original controls also work: Use <kbd>&uarr;</kbd> or <kbd>Space</kbd> key to play and <kbd>Esc</kbd> to close the game.
 
-(For x64 windows, get exe [here](http://www.lfd.uci.edu/~gohlke/pythonlibs/#pygame))
-
 Notable forks
 -------------
 
