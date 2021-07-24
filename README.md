@@ -1,7 +1,7 @@
 FlapPyBird with smiles
 ===============
 
-A Flappy Bird clone where you can smile to fly. Based on [this repo](https://github.com/sourabhv/FlapPyBird)
+A Flappy Bird clone where you can smile to fly. Based on [this repo](https://github.com/sourabhv/FlapPyBird). Uses smile detector [trained on Genki4K](https://github.com/lippings/smile-detection)
 
 Install and run
 ---------------------------
