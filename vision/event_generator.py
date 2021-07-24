@@ -1,11 +1,12 @@
 from time import sleep
 from random import random
 import threading
+from typing import Dict, Tuple, Any
 
 import pygame
 from cv2 import VideoCapture, imshow
 
-from .detector import SmileDetector
+from .detector import BaseDetector, DeepSmileDetector
 
 RAND_EVENT = pygame.event.custom_type()
 SMILE_EVENT = pygame.event.custom_type()
@@ -44,7 +45,7 @@ class RandomEventGenerator():
 
 
 class SmileEventGenerator():
-    def __init__(self, show_webcam=False):
+    def __init__(self, show_webcam=False, method='deep'):
         self._show = show_webcam
         self._running = False
         self._job_thread = threading.Thread(
@@ -53,7 +54,31 @@ class SmileEventGenerator():
             daemon=True
         )
 
-        self._detector = SmileDetector()
+        method_dict: Dict[str, Tuple[BaseDetector, Dict[str, Any], str]] = {
+            'deep': (
+                DeepSmileDetector,
+                {
+                    'pretrained_name': 'mobilenetv2'
+                },
+                'Deep network-based detector')
+        }
+        
+        self._detector = None
+        for method_name, (method_class, method_kwargs, _) in method_dict.items():
+            if method_name == method:
+                self._detector = method_class(**method_kwargs)
+                break
+        
+        if self._detector is None:
+            method_descs = '\n'.join(
+                f'\t{method_name}: {method_desc}' for method_name, (_, _, method_desc) in method_dict.items()
+            )
+
+            raise AttributeError(f'Unknown method name for smile detector: {method}\n'
+                                 f'Known methods:\n{method_descs}')
+        
+        if method == 'deep':
+            self._detector = DeepSmileDetector()
         self._current_frame = None
     
     def _thread_job(self):

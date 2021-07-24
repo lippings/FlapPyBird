@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from numpy import array as nparray
 from cv2 import resize, INTER_AREA
 from torch import load as load_state
 from torch import no_grad, round
@@ -11,7 +12,18 @@ from .network import SmileNetworkBase, SmileNetworkPretrained
 
 PARENT = Path(__file__).parent
 
-class SmileDetector():
+class BaseDetector():
+    def __init__(self):
+        ...
+    
+    def __call__(self, im: nparray) -> int:
+        return self._detect(im)
+    
+    def _detect(self, im: nparray) -> int:
+        ...
+
+
+class DeepSmileDetector(BaseDetector):
     def __init__(self,
                  pretrained_name='mobilenetv2',
                  weight_file=str(PARENT / 'models/model_finetune_mobilenetv2')):
@@ -42,7 +54,7 @@ class SmileDetector():
             Lambda(lambda im: int(round(im).item()))
         ])
     
-    def __call__(self, im):
+    def _detect(self, im):
         x = self._preproc(im)
         
         with no_grad():
