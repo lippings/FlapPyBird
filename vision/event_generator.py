@@ -6,10 +6,11 @@ from typing import Dict, Tuple, Any
 import pygame
 from cv2 import VideoCapture, imshow
 
-from .detector import BaseDetector, DeepSmileDetector
+from .detector import BaseDetector, DeepSmileDetector, CascadeSmileDetector
 
 RAND_EVENT = pygame.event.custom_type()
 SMILE_EVENT = pygame.event.custom_type()
+
 
 class RandomEventGenerator():
     def __init__(self, clicks_per_sec=1):
@@ -60,7 +61,12 @@ class SmileEventGenerator():
                 {
                     'pretrained_name': 'mobilenetv2'
                 },
-                'Deep network-based detector')
+                'Deep network-based detector'),
+            'cascade': (
+                CascadeSmileDetector,
+                {},
+                'Haar cascade filter-based detector'
+            )
         }
         
         self._detector = None
@@ -96,7 +102,6 @@ class SmileEventGenerator():
             # imshow outside main thread doesn't work
             self._current_frame = frame
 
-    # TODO: There's probably a better place for this
     def display(self):
         if self._show:
             if self._current_frame is not None:

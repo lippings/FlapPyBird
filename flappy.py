@@ -52,7 +52,7 @@ PIPES_LIST = (
 
 
 print('Loading detection model')
-event_gen = SmileEventGenerator(True)
+event_gen = SmileEventGenerator(True, 'cascade')
 print('Done')
 event_gen.start()
 
