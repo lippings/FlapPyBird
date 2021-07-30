@@ -12,26 +12,25 @@ RAND_EVENT = pygame.event.custom_type()
 SMILE_EVENT = pygame.event.custom_type()
 
 
-class RandomEventGenerator():
-    def __init__(self, clicks_per_sec=1):
-        self._cps = clicks_per_sec
+class BaseEventGenerator():
+    def __init__(self, show_webcam=False, thread_name='Event generator thread'):
         self._job_thread = threading.Thread(
             target=self._thread_job,
-            name='Random event generator thread',
+            name=thread_name,
             daemon=True
         )
+        
+        self._running = False
+        self._current_frame = None
+        self._show = show_webcam
 
     def _thread_job(self):
-        period = 0.05
-        prob = period * self._cps
-        while self._running:
-            r = random()
+        ...
 
-            if r < prob:
-                ev = pygame.event.Event(RAND_EVENT)
-                pygame.event.post(ev)
-            
-            sleep(period)
+    def display(self):
+        if self._show:
+            if self._current_frame is not None:
+                imshow('', self._current_frame)
 
     def start(self):
         if self._running:
@@ -45,15 +44,27 @@ class RandomEventGenerator():
         self._job_thread.join()
 
 
-class SmileEventGenerator():
+class RandomEventGenerator(BaseEventGenerator):
+    def __init__(self, clicks_per_sec=1):
+        super().__init__(show_webcam=False)
+        self._cps = clicks_per_sec
+
+    def _thread_job(self):
+        period = 0.05
+        prob = period * self._cps
+        while self._running:
+            r = random()
+
+            if r < prob:
+                ev = pygame.event.Event(RAND_EVENT)
+                pygame.event.post(ev)
+            
+            sleep(period)
+
+
+class SmileEventGenerator(BaseEventGenerator):
     def __init__(self, show_webcam=False, method='deep'):
-        self._show = show_webcam
-        self._running = False
-        self._job_thread = threading.Thread(
-            target=self._thread_job,
-            name='Smile detection event generator',
-            daemon=True
-        )
+        super().__init__(show_webcam=show_webcam)
 
         method_dict: Dict[str, Tuple[BaseDetector, Dict[str, Any], str]] = {
             'deep': (
@@ -85,7 +96,6 @@ class SmileEventGenerator():
         
         if method == 'deep':
             self._detector = DeepSmileDetector()
-        self._current_frame = None
     
     def _thread_job(self):
         cap = VideoCapture(0)
@@ -102,18 +112,4 @@ class SmileEventGenerator():
             # imshow outside main thread doesn't work
             self._current_frame = frame
 
-    def display(self):
-        if self._show:
-            if self._current_frame is not None:
-                imshow('', self._current_frame)
-    
-    def start(self):
-        if self._running:
-            print('Already running')
-            return
-        self._running = True
-        self._job_thread.start()
-    
-    def stop(self):
-        self._running = False
-        self._job_thread.join()
+# EOF
