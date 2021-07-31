@@ -35,6 +35,12 @@ Notable forks
 Made something awesome from FlapPyBird? Add it to the list :)
 
 
+TODO
+---
+
+- Better way to configure, probably yaml
+- Add some audio control?
+
 ScreenShot
 ----------
 
