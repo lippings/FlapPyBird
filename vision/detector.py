@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from numpy import array as nparray
+from scipy.spatial.distance import euclidean as dist
 import cv2
 from torch import load as load_state
 from torch import no_grad, round
@@ -66,11 +67,10 @@ class DeepSmileDetector(BaseDetector):
 class CascadeSmileDetector(BaseDetector):
     def __init__(self):
         self._cascades = {
-            'face': cv2.CascadeClassifier(cv2.data.haarcascades +'haarcascade_frontalface_default.xml'),
-            'smile': cv2.CascadeClassifier(cv2.data.haarcascades +'haarcascade_smile.xml')
+            'face': cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'),
+            'smile': cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_smile.xml')
         }
 
-    
     def _detect(self, im):
         gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
 
@@ -81,5 +81,58 @@ class CascadeSmileDetector(BaseDetector):
 
             if len(smiles) > 0:
                 return 1
+        
+        return 0
+
+
+class LandmarkBlinkDetector(BaseDetector):
+    def __init__(self):
+        self._cascades = {
+            'face': cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_alt2.xml')
+        }
+        self._fmark = cv2.face.createFacemarkLBF()
+        self._fmark.loadModel(str(PARENT / 'models/lbfmodel.yaml'))
+
+        self._eye_thres = 0.2
+        self._consec_thres = 1
+
+        self._consec_counter = 0
+    
+    @staticmethod
+    def _ear(lm):
+        eye1 = lm[36:42]
+        eye2 = lm[42:48]
+
+        def eye_ear(eye):
+            a = dist(eye[1], eye[5])
+            b = dist(eye[2], eye[4])
+            c = dist(eye[0], eye[3])
+
+            return (a + b) / (2*c)
+        
+        return (eye_ear(eye1) + eye_ear(eye2)) / 2
+    
+    def _detect(self, im):
+        gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+
+        faces = self._cascades['face'].detectMultiScale(gray)
+
+        if len(faces) != 0:
+            faces = nparray([max(faces, key=lambda f:f[2]*f[3])])
+            succ, lmark = self._fmark.fit(gray, faces)
+
+            if succ:
+                ear = self._ear(lmark[0][0])
+
+                if ear < self._eye_thres:
+                    self._consec_counter += 1
+                else:
+                    if self._consec_counter >= self._consec_thres:
+                        result = 1
+                    else:
+                        result = 0
+
+                    self._consec_counter = 0
+                    return result
         
         return 0

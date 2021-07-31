@@ -5,7 +5,7 @@ import sys
 import pygame
 from pygame.locals import *
 
-from vision.event_generator import SMILE_EVENT, SmileEventGenerator
+from vision.event_generator import BlinkEventGenerator
 
 
 FPS = 30
@@ -52,7 +52,8 @@ PIPES_LIST = (
 
 
 print('Loading detection model')
-event_gen = SmileEventGenerator(True, 'cascade')
+event_gen = BlinkEventGenerator(True)
+SMILE_EVENT = event_gen.event
 print('Done')
 event_gen.start()
 

@@ -4,9 +4,9 @@ import threading
 from typing import Dict, Tuple, Any
 
 import pygame
-from cv2 import VideoCapture, imshow
+import cv2
 
-from .detector import BaseDetector, DeepSmileDetector, CascadeSmileDetector
+from .detector import BaseDetector, DeepSmileDetector, CascadeSmileDetector, LandmarkBlinkDetector
 
 RAND_EVENT = pygame.event.custom_type()
 SMILE_EVENT = pygame.event.custom_type()
@@ -23,6 +23,11 @@ class BaseEventGenerator():
         self._running = False
         self._current_frame = None
         self._show = show_webcam
+        self.event = pygame.event.custom_type()
+
+    def _fire_event(self):
+        ev = pygame.event.Event(self.event)
+        pygame.event.post(ev)
 
     def _thread_job(self):
         ...
@@ -30,7 +35,7 @@ class BaseEventGenerator():
     def display(self):
         if self._show:
             if self._current_frame is not None:
-                imshow('', self._current_frame)
+                cv2.imshow('', self._current_frame)
 
     def start(self):
         if self._running:
@@ -56,8 +61,7 @@ class RandomEventGenerator(BaseEventGenerator):
             r = random()
 
             if r < prob:
-                ev = pygame.event.Event(RAND_EVENT)
-                pygame.event.post(ev)
+                self._fire_event()
             
             sleep(period)
 
@@ -93,12 +97,9 @@ class SmileEventGenerator(BaseEventGenerator):
 
             raise AttributeError(f'Unknown method name for smile detector: {method}\n'
                                  f'Known methods:\n{method_descs}')
-        
-        if method == 'deep':
-            self._detector = DeepSmileDetector()
     
     def _thread_job(self):
-        cap = VideoCapture(0)
+        cap = cv2.VideoCapture(0)
 
         while self._running:
             _, frame = cap.read()
@@ -106,8 +107,47 @@ class SmileEventGenerator(BaseEventGenerator):
             pred_label = self._detector(frame)
 
             if pred_label == 1:
-                ev = pygame.event.Event(SMILE_EVENT)
-                pygame.event.post(ev)
+                self._fire_event()
+            
+            # imshow outside main thread doesn't work
+            self._current_frame = frame
+
+
+class BlinkEventGenerator(BaseEventGenerator):
+    def __init__(self, show_webcam=False, method='landmark'):
+        super().__init__(show_webcam=show_webcam)
+
+        method_dict: Dict[str, Tuple[BaseDetector, Dict[str, Any], str]] = {
+            'landmark': (
+                LandmarkBlinkDetector,
+                {},
+                'Landmark-based detector')
+        }
+        
+        self._detector = None
+        for method_name, (method_class, method_kwargs, _) in method_dict.items():
+            if method_name == method:
+                self._detector = method_class(**method_kwargs)
+                break
+        
+        if self._detector is None:
+            method_descs = '\n'.join(
+                f'\t{method_name}: {method_desc}' for method_name, (_, _, method_desc) in method_dict.items()
+            )
+
+            raise AttributeError(f'Unknown method name for smile detector: {method}\n'
+                                 f'Known methods:\n{method_descs}')
+    
+    def _thread_job(self):
+        cap = cv2.VideoCapture(0)
+
+        while self._running:
+            _, frame = cap.read()
+
+            pred_label = self._detector(frame)
+
+            if pred_label == 1:
+                self._fire_event()
             
             # imshow outside main thread doesn't work
             self._current_frame = frame
