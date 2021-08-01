@@ -115,7 +115,7 @@ class LandmarkBlinkDetector(BaseDetector):
     def _detect(self, im):
         gray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
 
-        faces = self._cascades['face'].detectMultiScale(gray)
+        faces = self._cascades['face'].detectMultiScale(gray, 1.3, 5)
 
         if len(faces) != 0:
             faces = nparray([max(faces, key=lambda f:f[2]*f[3])])
