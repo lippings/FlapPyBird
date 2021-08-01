@@ -38,6 +38,7 @@ Made something awesome from FlapPyBird? Add it to the list :)
 TODO
 ---
 
+- Make webcam feed and pygame window display side-by-side
 - Better way to configure, probably yaml
 - Add some audio control?
 
