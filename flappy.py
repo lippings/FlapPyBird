@@ -51,13 +51,6 @@ PIPES_LIST = (
 )
 
 
-print('Loading detection model')
-event_gen = BlinkEventGenerator(True)
-SMILE_EVENT = event_gen.event
-print('Done')
-event_gen.start()
-
-
 try:
     xrange
 except NameError:
@@ -138,9 +131,15 @@ def main():
             getHitmask(IMAGES['player'][2]),
         )
 
-        movementInfo = showWelcomeAnimation()
-        crashInfo = mainGame(movementInfo)
-        showGameOverScreen(crashInfo)
+        cont, movementInfo = showWelcomeAnimation()
+        if not cont:
+            break
+        cont, crashInfo = mainGame(movementInfo)
+        if not cont:
+            break
+        cont = showGameOverScreen(crashInfo)
+        if not cont:
+            break
 
 
 def showWelcomeAnimation():
@@ -168,11 +167,11 @@ def showWelcomeAnimation():
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 pygame.quit()
-                sys.exit()
+                return False, {}
             if event.type == SMILE_EVENT or event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP):
                 # make first flap sound and return values for mainGame
                 SOUNDS['wing'].play()
-                return {
+                return True, {
                     'playery': playery + playerShmVals['val'],
                     'basex': basex,
                     'playerIndexGen': playerIndexGen,
@@ -239,7 +238,7 @@ def mainGame(movementInfo):
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 pygame.quit()
-                sys.exit()
+                return False, {}
             if event.type == SMILE_EVENT or event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP):
                 if playery > -2 * IMAGES['player'][0].get_height():
                     playerVelY = playerFlapAcc
@@ -250,7 +249,7 @@ def mainGame(movementInfo):
         crashTest = checkCrash({'x': playerx, 'y': playery, 'index': playerIndex},
                                upperPipes, lowerPipes)
         if crashTest[0]:
-            return {
+            return True, {
                 'y': playery,
                 'groundCrash': crashTest[1],
                 'basex': basex,
@@ -355,10 +354,10 @@ def showGameOverScreen(crashInfo):
         for event in pygame.event.get():
             if event.type == QUIT or (event.type == KEYDOWN and event.key == K_ESCAPE):
                 pygame.quit()
-                sys.exit()
+                return False
             if event.type == SMILE_EVENT or event.type == KEYDOWN and (event.key == K_SPACE or event.key == K_UP):
                 if playery + playerHeight >= BASEY - 1:
-                    return
+                    return True
 
         # player y shift
         if playery + playerHeight < BASEY - 1:
@@ -496,4 +495,12 @@ def getHitmask(image):
     return mask
 
 if __name__ == '__main__':
+    print('Loading detection model')
+    event_gen = BlinkEventGenerator(True)
+    SMILE_EVENT = event_gen.event
+    print('Done')
+    event_gen.start()
+
     main()
+
+    event_gen.stop()
